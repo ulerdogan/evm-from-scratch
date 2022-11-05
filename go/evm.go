@@ -40,8 +40,26 @@ type TestCase struct {
 
 func evm(code []byte) []big.Int {
 	var stack []big.Int
+	pc := 0
 
-	// TODO: Implement the EVM here!
+LOOP:
+	for pc < len(code) {
+		opcode := code[pc]
+
+		switch opcode {
+		case 00:
+			break LOOP
+		case 0x60:
+			item := fmt.Sprintf("%x", code[pc+1:pc+2])
+			bn := new(big.Int)
+			bn.SetString(item, 16)
+			stack = append([]big.Int{*bn}, stack...)
+			pc += 1
+		case 0x50:
+			stack = stack[1:]
+		}
+		pc++
+	}
 
 	return stack
 }
@@ -59,7 +77,7 @@ func main() {
 	}
 
 	for index, test := range payload {
-		fmt.Printf("Test #%v of %v: %v\n", index + 1, len(payload), test.Name)
+		fmt.Printf("Test #%v of %v: %v\n", index+1, len(payload), test.Name)
 
 		bin, err := hex.DecodeString(test.Code.Bin)
 		if err != nil {

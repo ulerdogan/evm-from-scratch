@@ -55,17 +55,10 @@ var (
 	}
 )
 
-func (s *evmstack) getHeads() []*big.Int {
-	heads := []*big.Int{s.s[0], s.s[1]}
-	s.s = s.s[2:]
-	return heads
-}
-
 func (s *evmstack) oprHeads(f func(x *big.Int, y *big.Int) *big.Int) *big.Int {
 	heads := []*big.Int{s.s[0], s.s[1]}
 	s.s = s.s[2:]
-	res := f(heads[0], heads[1])
-	return res.Mod(res, max.uint256Max)
+	return f(heads[0], heads[1])
 }
 
 func evm(code []byte) []*big.Int {
@@ -90,6 +83,7 @@ LOOP:
 			stack.s = stack.s[1:]
 		case 0x01: // ADD
 			res := stack.oprHeads(new(big.Int).Add)
+			res.Mod(res, max.uint256Max)
 			stack.s = append([]*big.Int{res}, stack.s...)
 		case 0x7f: // PUSH32
 			pb := 32
@@ -100,17 +94,29 @@ LOOP:
 			pc += pb
 		case 0x02: // MUL
 			res := stack.oprHeads(new(big.Int).Mul)
+			res.Mod(res, max.uint256Max)
 			stack.s = append([]*big.Int{res}, stack.s...)
 		case 0x03: // SUB
 			res := stack.oprHeads(new(big.Int).Sub)
+			res.Mod(res, max.uint256Max)
 			stack.s = append([]*big.Int{res}, stack.s...)
-		case 0x04: // DIV
+		case 0x04, 0x05: // DIV, SDIV
 			var res *big.Int
 			if stack.s[1].String() == "0" {
 				stack.s = stack.s[2:]
 				res = big.NewInt(0)
 			} else {
 				res = stack.oprHeads(new(big.Int).Div)
+				res.Mod(res, max.uint256Max)
+			}
+			stack.s = append([]*big.Int{res}, stack.s...)
+		case 0x06: // MOD
+			var res *big.Int
+			if stack.s[1].String() == "0" {
+				stack.s = stack.s[2:]
+				res = big.NewInt(0)
+			} else {
+				res = stack.oprHeads(new(big.Int).Mod)
 			}
 			stack.s = append([]*big.Int{res}, stack.s...)
 		}
@@ -120,7 +126,7 @@ LOOP:
 }
 
 func main() {
-	content, err := ioutil.ReadFile("../evm.json")
+	content, err := ioutil.ReadFile("./evm.json")
 	if err != nil {
 		log.Fatal("Error when opening file: ", err)
 	}

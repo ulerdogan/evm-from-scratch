@@ -90,6 +90,15 @@ LOOP:
 			sum = sum.Mod(sum, &uint256max)
 
 			stack = append([]big.Int{*sum}, stack...)
+		case 0x03:
+			tosub := []big.Int{stack[0], stack[1]}
+			stack = stack[2:]
+
+			res := new(big.Int)
+			res.Sub(&tosub[0], &tosub[1])
+			res = res.Mod(res, max.Uint256Max)
+
+			stack = append([]big.Int{*res}, stack...)
 		}
 		pc++
 	}

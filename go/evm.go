@@ -26,10 +26,17 @@ type code struct {
 	Asm string
 }
 
+type evmstack struct {
+	s []*big.Int
+}
+
 type expect struct {
 	Stack   []string
 	Success bool
 	Return  string
+}
+type maxNums struct {
+	uint256Max *big.Int
 }
 
 type TestCase struct {
@@ -38,13 +45,9 @@ type TestCase struct {
 	Expect expect
 }
 
-type Max struct {
-	Uint256Max *big.Int
-}
-
 var (
-	max *Max = &Max{
-		Uint256Max: func() *big.Int {
+	max *maxNums = &maxNums{
+		uint256Max: func() *big.Int {
 			var max big.Int
 			max.Exp(big.NewInt(2), big.NewInt(256), nil)
 			return &max
@@ -52,8 +55,14 @@ var (
 	}
 )
 
-func evm(code []byte) []big.Int {
-	var stack []big.Int
+func (s *evmstack) getHeads() []*big.Int {
+	heads := []*big.Int{s.s[0], s.s[1]}
+	s.s = s.s[2:]
+	return heads
+}
+
+func evm(code []byte) []*big.Int {
+	var stack *evmstack = &evmstack{}
 	pc := 0
 
 LOOP:
@@ -61,58 +70,54 @@ LOOP:
 		opcode := code[pc]
 
 		switch opcode {
-		case 00:
+		case 00: // STOP
 			break LOOP
-		case 0x60:
+		case 0x60: // PUSH1
 			pb := 1
 			item := fmt.Sprintf("%x", code[pc+1:pc+1+pb])
 			bn := new(big.Int)
 			bn.SetString(item, 16)
 
-			stack = append([]big.Int{*bn}, stack...)
+			stack.s = append([]*big.Int{bn}, stack.s...)
 			pc += pb
-		case 0x50:
-			stack = stack[1:]
-		case 0x01:
-			heads := []big.Int{stack[0], stack[1]}
-			stack = stack[2:]
+		case 0x50: // POP
+			stack.s = stack.s[1:]
+		case 0x01: // ADD
+			heads := stack.getHeads()
 
 			res := new(big.Int)
-			res.Add(&heads[0], &heads[1])
-			res = res.Mod(res, max.Uint256Max)
+			res.Add(heads[0], heads[1])
+			res = res.Mod(res, max.uint256Max)
 
-			stack = append([]big.Int{*res}, stack...)
-		case 0x7f:
+			stack.s = append([]*big.Int{res}, stack.s...)
+		case 0x7f: // PUSH32
 			pb := 32
 			item := fmt.Sprintf("%x", code[pc+1:pc+1+pb])
 			bn := new(big.Int)
 			bn.SetString(item, 16)
 
-			stack = append([]big.Int{*bn}, stack...)
+			stack.s = append([]*big.Int{bn}, stack.s...)
 			pc += pb
-		case 0x02:
-			heads := []big.Int{stack[0], stack[1]}
-			stack = stack[2:]
+		case 0x02: // MUL
+			heads := stack.getHeads()
 
 			res := new(big.Int)
-			res.Mul(&heads[0], &heads[1])
-			res = res.Mod(res, max.Uint256Max)
+			res.Mul(heads[0], heads[1])
+			res = res.Mod(res, max.uint256Max)
 
-			stack = append([]big.Int{*res}, stack...)
-		case 0x03:
-			heads := []big.Int{stack[0], stack[1]}
-			stack = stack[2:]
+			stack.s = append([]*big.Int{res}, stack.s...)
+		case 0x03: // SUB
+			heads := stack.getHeads()
 
 			res := new(big.Int)
-			res.Sub(&heads[0], &heads[1])
-			res = res.Mod(res, max.Uint256Max)
+			res.Sub(heads[0], heads[1])
+			res = res.Mod(res, max.uint256Max)
 
-			stack = append([]big.Int{*res}, stack...)
+			stack.s = append([]*big.Int{res}, stack.s...)
 		}
 		pc++
 	}
-
-	return stack
+	return stack.s
 }
 
 func main() {
@@ -135,13 +140,13 @@ func main() {
 			log.Fatal("Error during hex.DecodeString(): ", err)
 		}
 
-		var expectedStack []big.Int
+		var expectedStack []*big.Int
 		for _, s := range test.Expect.Stack {
 			i, ok := new(big.Int).SetString(s, 0)
 			if !ok {
 				log.Fatal("Error during big.Int.SetString(): ", err)
 			}
-			expectedStack = append(expectedStack, *i)
+			expectedStack = append(expectedStack, i)
 		}
 
 		// Note: as the test cases get more complex, you'll need to modify this
@@ -152,7 +157,7 @@ func main() {
 		match := len(stack) == len(expectedStack)
 		if match {
 			for i, s := range stack {
-				match = match && (s.Cmp(&expectedStack[i]) == 0)
+				match = match && (s.Cmp(expectedStack[i]) == 0)
 			}
 		}
 
@@ -166,7 +171,7 @@ func main() {
 	}
 }
 
-func toStrings(stack []big.Int) []string {
+func toStrings(stack []*big.Int) []string {
 	var strings []string
 	for _, s := range stack {
 		strings = append(strings, s.String())

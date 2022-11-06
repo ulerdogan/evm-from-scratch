@@ -61,6 +61,13 @@ func (s *evmstack) getHeads() []*big.Int {
 	return heads
 }
 
+func (s *evmstack) oprHeads(f func(x *big.Int, y *big.Int) *big.Int) *big.Int {
+	heads := []*big.Int{s.s[0], s.s[1]}
+	s.s = s.s[2:]
+	res := f(heads[0], heads[1])
+	return res.Mod(res, max.uint256Max)
+}
+
 func evm(code []byte) []*big.Int {
 	var stack *evmstack = &evmstack{}
 	pc := 0
@@ -77,42 +84,34 @@ LOOP:
 			item := fmt.Sprintf("%x", code[pc+1:pc+1+pb])
 			bn := new(big.Int)
 			bn.SetString(item, 16)
-
 			stack.s = append([]*big.Int{bn}, stack.s...)
 			pc += pb
 		case 0x50: // POP
 			stack.s = stack.s[1:]
 		case 0x01: // ADD
-			heads := stack.getHeads()
-
-			res := new(big.Int)
-			res.Add(heads[0], heads[1])
-			res = res.Mod(res, max.uint256Max)
-
+			res := stack.oprHeads(new(big.Int).Add)
 			stack.s = append([]*big.Int{res}, stack.s...)
 		case 0x7f: // PUSH32
 			pb := 32
 			item := fmt.Sprintf("%x", code[pc+1:pc+1+pb])
 			bn := new(big.Int)
 			bn.SetString(item, 16)
-
 			stack.s = append([]*big.Int{bn}, stack.s...)
 			pc += pb
 		case 0x02: // MUL
-			heads := stack.getHeads()
-
-			res := new(big.Int)
-			res.Mul(heads[0], heads[1])
-			res = res.Mod(res, max.uint256Max)
-
+			res := stack.oprHeads(new(big.Int).Mul)
 			stack.s = append([]*big.Int{res}, stack.s...)
 		case 0x03: // SUB
-			heads := stack.getHeads()
-
-			res := new(big.Int)
-			res.Sub(heads[0], heads[1])
-			res = res.Mod(res, max.uint256Max)
-
+			res := stack.oprHeads(new(big.Int).Sub)
+			stack.s = append([]*big.Int{res}, stack.s...)
+		case 0x04: // DIV
+			var res *big.Int
+			if stack.s[1].String() == "0" {
+				stack.s = stack.s[2:]
+				res = big.NewInt(0)
+			} else {
+				res = stack.oprHeads(new(big.Int).Div)
+			}
 			stack.s = append([]*big.Int{res}, stack.s...)
 		}
 		pc++

@@ -32,6 +32,11 @@ type expect struct {
 	Return  string
 }
 
+var uint256max big.Int = func() big.Int {
+	var max big.Int
+	return *max.Exp(big.NewInt(2), big.NewInt(256), nil)
+}()
+
 type TestCase struct {
 	Name   string
 	Code   code
@@ -62,12 +67,10 @@ LOOP:
 		case 0x01:
 			toadd := []big.Int{stack[0], stack[1]}
 			stack = stack[2:]
+
 			total := new(big.Int)
 			total.Add(&toadd[0], &toadd[1])
-
-			var max big.Int
-			max.Exp(big.NewInt(2), big.NewInt(256), nil)
-			total = total.Mod(total, &max)
+			total = total.Mod(total, &uint256max)
 
 			stack = append([]big.Int{*total}, stack...)
 		case 0x7f:
@@ -78,6 +81,15 @@ LOOP:
 
 			stack = append([]big.Int{*bn}, stack...)
 			pc += pb
+		case 0x02:
+			tomul := []big.Int{stack[0], stack[1]}
+			stack = stack[2:]
+
+			sum := new(big.Int)
+			sum.Mul(&tomul[0], &tomul[1])
+			sum = sum.Mod(sum, &uint256max)
+
+			stack = append([]big.Int{*sum}, stack...)
 		}
 		pc++
 	}

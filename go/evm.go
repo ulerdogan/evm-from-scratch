@@ -50,13 +50,34 @@ LOOP:
 		case 00:
 			break LOOP
 		case 0x60:
-			item := fmt.Sprintf("%x", code[pc+1:pc+2])
+			pb := 1
+			item := fmt.Sprintf("%x", code[pc+1:pc+1+pb])
 			bn := new(big.Int)
 			bn.SetString(item, 16)
+
 			stack = append([]big.Int{*bn}, stack...)
-			pc += 1
+			pc += pb
 		case 0x50:
 			stack = stack[1:]
+		case 0x01:
+			toadd := []big.Int{stack[0], stack[1]}
+			stack = stack[2:]
+			total := new(big.Int)
+			total.Add(&toadd[0], &toadd[1])
+
+			var max big.Int
+			max.Exp(big.NewInt(2), big.NewInt(256), nil)
+			total = total.Mod(total, &max)
+
+			stack = append([]big.Int{*total}, stack...)
+		case 0x7f:
+			pb := 32
+			item := fmt.Sprintf("%x", code[pc+1:pc+1+pb])
+			bn := new(big.Int)
+			bn.SetString(item, 16)
+
+			stack = append([]big.Int{*bn}, stack...)
+			pc += pb
 		}
 		pc++
 	}

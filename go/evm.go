@@ -32,16 +32,25 @@ type expect struct {
 	Return  string
 }
 
-var uint256max big.Int = func() big.Int {
-	var max big.Int
-	return *max.Exp(big.NewInt(2), big.NewInt(256), nil)
-}()
-
 type TestCase struct {
 	Name   string
 	Code   code
 	Expect expect
 }
+
+type Max struct {
+	Uint256Max *big.Int
+}
+
+var (
+	max *Max = &Max{
+		Uint256Max: func() *big.Int {
+			var max big.Int
+			max.Exp(big.NewInt(2), big.NewInt(256), nil)
+			return &max
+		}(),
+	}
+)
 
 func evm(code []byte) []big.Int {
 	var stack []big.Int
@@ -65,14 +74,14 @@ LOOP:
 		case 0x50:
 			stack = stack[1:]
 		case 0x01:
-			toadd := []big.Int{stack[0], stack[1]}
+			heads := []big.Int{stack[0], stack[1]}
 			stack = stack[2:]
 
-			total := new(big.Int)
-			total.Add(&toadd[0], &toadd[1])
-			total = total.Mod(total, &uint256max)
+			res := new(big.Int)
+			res.Add(&heads[0], &heads[1])
+			res = res.Mod(res, max.Uint256Max)
 
-			stack = append([]big.Int{*total}, stack...)
+			stack = append([]big.Int{*res}, stack...)
 		case 0x7f:
 			pb := 32
 			item := fmt.Sprintf("%x", code[pc+1:pc+1+pb])
@@ -82,20 +91,20 @@ LOOP:
 			stack = append([]big.Int{*bn}, stack...)
 			pc += pb
 		case 0x02:
-			tomul := []big.Int{stack[0], stack[1]}
-			stack = stack[2:]
-
-			sum := new(big.Int)
-			sum.Mul(&tomul[0], &tomul[1])
-			sum = sum.Mod(sum, &uint256max)
-
-			stack = append([]big.Int{*sum}, stack...)
-		case 0x03:
-			tosub := []big.Int{stack[0], stack[1]}
+			heads := []big.Int{stack[0], stack[1]}
 			stack = stack[2:]
 
 			res := new(big.Int)
-			res.Sub(&tosub[0], &tosub[1])
+			res.Mul(&heads[0], &heads[1])
+			res = res.Mod(res, max.Uint256Max)
+
+			stack = append([]big.Int{*res}, stack...)
+		case 0x03:
+			heads := []big.Int{stack[0], stack[1]}
+			stack = stack[2:]
+
+			res := new(big.Int)
+			res.Sub(&heads[0], &heads[1])
 			res = res.Mod(res, max.Uint256Max)
 
 			stack = append([]big.Int{*res}, stack...)

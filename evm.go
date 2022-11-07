@@ -16,9 +16,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/big"
+	"os"
 )
 
 type code struct {
@@ -126,7 +126,7 @@ LOOP:
 }
 
 func main() {
-	content, err := ioutil.ReadFile("./evm.json")
+	content, err := os.ReadFile("./evm.json")
 	if err != nil {
 		log.Fatal("Error when opening file: ", err)
 	}

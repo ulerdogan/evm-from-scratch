@@ -11,6 +11,9 @@ package main
 import (
 	"encoding/hex"
 	"encoding/json"
+	"evm-from-scratch-go/domain"
+	"evm-from-scratch-go/evm"
+	"evm-from-scratch-go/utils"
 	"fmt"
 	"log"
 	"math/big"
@@ -18,12 +21,12 @@ import (
 )
 
 func main() {
-	content, err := os.ReadFile("./evm.json")
+	content, err := os.ReadFile("../evm.json")
 	if err != nil {
 		log.Fatal("Error when opening file: ", err)
 	}
 
-	var payload []TestCase
+	var payload []domain.TestCase
 	err = json.Unmarshal(content, &payload)
 	if err != nil {
 		log.Fatal("Error during json.Unmarshal(): ", err)
@@ -49,7 +52,7 @@ func main() {
 		// Note: as the test cases get more complex, you'll need to modify this
 		// to pass down more arguments to the evm function and return more than
 		// just the stack.
-		stack := evm(bin)
+		stack := evm.Evm(bin)
 
 		match := len(stack) == len(expectedStack)
 		if match {
@@ -60,8 +63,8 @@ func main() {
 
 		if !match {
 			fmt.Printf("Instructions: \n%v\n", test.Code.Asm)
-			fmt.Printf("Expected: %v\n", toStrings(expectedStack))
-			fmt.Printf("Got: %v\n\n", toStrings(stack))
+			fmt.Printf("Expected: %v\n", utils.ToStrings(expectedStack))
+			fmt.Printf("Got: %v\n\n", utils.ToStrings(stack))
 			fmt.Printf("Progress: %v/%v\n\n", index, len(payload))
 			log.Fatal("Stack mismatch")
 		}

@@ -1,4 +1,4 @@
-package main
+package domain
 
 import (
 	"math/big"
@@ -15,12 +15,8 @@ type code struct {
 	Asm string
 }
 
-type evmstack struct {
-	s []*big.Int
-}
-
 type maxNums struct {
-	uint256Max *big.Int
+	Uint256Max *big.Int
 }
 
 type expect struct {
@@ -30,11 +26,11 @@ type expect struct {
 }
 
 var (
-	max *maxNums = &maxNums{
-		uint256Max: func() *big.Int {
-			var max big.Int
-			max.Exp(big.NewInt(2), big.NewInt(256), nil)
-			return &max
+	Max *maxNums = &maxNums{
+		Uint256Max: func() *big.Int {
+			var Max big.Int
+			Max.Exp(big.NewInt(2), big.NewInt(256), nil)
+			return &Max
 		}(),
 	}
 )

@@ -1,12 +1,14 @@
-package main
+package evm
 
 import (
+	"evm-from-scratch-go/domain"
+	"evm-from-scratch-go/utils"
 	"fmt"
 	"math/big"
 )
 
-func evm(code []byte) []*big.Int {
-	var stack *evmstack = &evmstack{}
+func Evm(code []byte) []*big.Int {
+	var stack *EvmStack = &EvmStack{}
 	pc := 0
 
 LOOP:
@@ -22,47 +24,47 @@ LOOP:
 			item := fmt.Sprintf("%x", code[pc+1:pc+1+pb])
 			bn := new(big.Int)
 			bn.SetString(item, 16)
-			stack.s = append([]*big.Int{bn}, stack.s...)
+			stack.S = append([]*big.Int{bn}, stack.S...)
 			pc += pb
 		case 0x61: // PUSH2
 			pb := 2
 			item := fmt.Sprintf("%x", code[pc+1:pc+1+pb])
 			bn := new(big.Int)
 			bn.SetString(item, 16)
-			stack.s = append([]*big.Int{bn}, stack.s...)
+			stack.S = append([]*big.Int{bn}, stack.S...)
 			pc += pb
 		case 0x62: // PUSH3
 			pb := 3
 			item := fmt.Sprintf("%x", code[pc+1:pc+1+pb])
 			bn := new(big.Int)
 			bn.SetString(item, 16)
-			stack.s = append([]*big.Int{bn}, stack.s...)
+			stack.S = append([]*big.Int{bn}, stack.S...)
 			pc += pb
 		case 0x7f: // PUSH32
 			pb := 32
 			item := fmt.Sprintf("%x", code[pc+1:pc+1+pb])
 			bn := new(big.Int)
 			bn.SetString(item, 16)
-			stack.s = append([]*big.Int{bn}, stack.s...)
+			stack.S = append([]*big.Int{bn}, stack.S...)
 			pc += pb
 		case 0x50: // POP
 			_ = stack.getHeads(1)[0]
 		case 0x01: // ADD
 			res := stack.oprHeads(new(big.Int).Add, false)
-			res.Mod(res, max.uint256Max)
-			stack.s = append([]*big.Int{res}, stack.s...)
+			res.Mod(res, domain.Max.Uint256Max)
+			stack.S = append([]*big.Int{res}, stack.S...)
 		case 0x02: // MUL
 			res := stack.oprHeads(new(big.Int).Mul, false)
-			res.Mod(res, max.uint256Max)
-			stack.s = append([]*big.Int{res}, stack.s...)
+			res.Mod(res, domain.Max.Uint256Max)
+			stack.S = append([]*big.Int{res}, stack.S...)
 		case 0x03: // SUB
 			res := stack.oprHeads(new(big.Int).Sub, false)
-			res.Mod(res, max.uint256Max)
-			stack.s = append([]*big.Int{res}, stack.s...)
+			res.Mod(res, domain.Max.Uint256Max)
+			stack.S = append([]*big.Int{res}, stack.S...)
 		case 0x04, 0x05: // DIV, SDIV
 			var res *big.Int
-			if stack.s[1].String() == "0" {
-				stack.s = stack.s[2:]
+			if stack.S[1].String() == "0" {
+				stack.S = stack.S[2:]
 				res = big.NewInt(0)
 			} else {
 				if opcode == 0x04 {
@@ -71,11 +73,11 @@ LOOP:
 					res = stack.oprHeads(new(big.Int).Div, true)
 				}
 			}
-			stack.s = append([]*big.Int{res}, stack.s...)
+			stack.S = append([]*big.Int{res}, stack.S...)
 		case 0x06, 0x07: // MOD, SMOD
 			var res *big.Int
-			if stack.s[1].String() == "0" {
-				stack.s = stack.s[2:]
+			if stack.S[1].String() == "0" {
+				stack.S = stack.S[2:]
 				res = big.NewInt(0)
 			} else {
 				if opcode == 0x06 {
@@ -84,7 +86,7 @@ LOOP:
 					res = stack.oprHeads(new(big.Int).Rem, true)
 				}
 			}
-			stack.s = append([]*big.Int{res}, stack.s...)
+			stack.S = append([]*big.Int{res}, stack.S...)
 		case 0x10, 0x11: // LT, GT
 			heads := stack.getHeads(2)
 			var bn *big.Int
@@ -99,10 +101,10 @@ LOOP:
 			} else {
 				bn = big.NewInt(0)
 			}
-			stack.s = append([]*big.Int{bn}, stack.s...)
+			stack.S = append([]*big.Int{bn}, stack.S...)
 		case 0x12, 0x13: // SLT, SGT
 			heads := stack.getHeads(2)
-			heads = twosComps(heads)
+			heads = utils.TwosComps(heads)
 			var bn *big.Int
 
 			cmp := 1
@@ -115,7 +117,7 @@ LOOP:
 			} else {
 				bn = big.NewInt(0)
 			}
-			stack.s = append([]*big.Int{bn}, stack.s...)
+			stack.S = append([]*big.Int{bn}, stack.S...)
 		case 0x14: // EQ
 			heads := stack.getHeads(2)
 			var bn *big.Int
@@ -124,7 +126,7 @@ LOOP:
 			} else {
 				bn = big.NewInt(0)
 			}
-			stack.s = append([]*big.Int{bn}, stack.s...)
+			stack.S = append([]*big.Int{bn}, stack.S...)
 		case 0x15: // ISZERO
 			head := stack.getHeads(1)[0]
 			var bn *big.Int
@@ -133,45 +135,45 @@ LOOP:
 			if head.Cmp(big.NewInt(0)) == 0 {
 				bn = big.NewInt(1)
 			}
-			stack.s = append([]*big.Int{bn}, stack.s...)
+			stack.S = append([]*big.Int{bn}, stack.S...)
 		case 0x16: // AND
 			res := stack.oprHeads(new(big.Int).And, false)
-			stack.s = append([]*big.Int{res}, stack.s...)
+			stack.S = append([]*big.Int{res}, stack.S...)
 		case 0x17: // OR
 			res := stack.oprHeads(new(big.Int).Or, false)
-			stack.s = append([]*big.Int{res}, stack.s...)
+			stack.S = append([]*big.Int{res}, stack.S...)
 		case 0x18: // XOR
 			res := stack.oprHeads(new(big.Int).Xor, false)
-			stack.s = append([]*big.Int{res}, stack.s...)
+			stack.S = append([]*big.Int{res}, stack.S...)
 		case 0x19: // NOT
 			res := stack.oprHead(new(big.Int).Not, true)
-			stack.s = append([]*big.Int{res}, stack.s...)
+			stack.S = append([]*big.Int{res}, stack.S...)
 		case 0x1a: // BYTE
 			heads := stack.getHeads(2)
 			r := new(big.Int).Sub(big.NewInt(248), new(big.Int).Mul(heads[0], big.NewInt(8)))
 			res := new(big.Int).Rsh(heads[1], uint(r.Int64()))
-			bn := byteToBn("ff")
+			bn := utils.ByteToBn("ff")
 			res = new(big.Int).And(res, bn)
-			stack.s = append([]*big.Int{res}, stack.s...)
+			stack.S = append([]*big.Int{res}, stack.S...)
 		case 0x80: // DUP1
 			head := stack.getHeads(1)[0]
-			stack.s = append([]*big.Int{head, head}, stack.s...)
+			stack.S = append([]*big.Int{head, head}, stack.S...)
 		case 0x82: // DUP3
 			heads := stack.getHeads(3)
-			stack.s = append([]*big.Int{heads[2], heads[0], heads[1], heads[2]}, stack.s...)
+			stack.S = append([]*big.Int{heads[2], heads[0], heads[1], heads[2]}, stack.S...)
 		case 0x90: // SWAP1
 			heads := stack.getHeads(2)
-			stack.s = append([]*big.Int{heads[1], heads[0]}, stack.s...)
+			stack.S = append([]*big.Int{heads[1], heads[0]}, stack.S...)
 		case 0x92: // SWAP3
 			heads := stack.getHeads(4)
-			stack.s = append([]*big.Int{heads[3], heads[1], heads[2], heads[0]}, stack.s...)
+			stack.S = append([]*big.Int{heads[3], heads[1], heads[2], heads[0]}, stack.S...)
 		case 0xfe: // INVALID
 			break SWITCH
 		case 0x58: // PC
 			bn := big.NewInt(int64(pc))
-			stack.s = append([]*big.Int{bn}, stack.s...)
+			stack.S = append([]*big.Int{bn}, stack.S...)
 		}
 		pc++
 	}
-	return stack.s
+	return stack.S
 }

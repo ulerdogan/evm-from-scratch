@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"encoding/hex"
@@ -6,7 +6,7 @@ import (
 	"math/big"
 )
 
-func toStrings(stack []*big.Int) []string {
+func ToStrings(stack []*big.Int) []string {
 	var strings []string
 	for _, s := range stack {
 		strings = append(strings, s.String())
@@ -14,7 +14,7 @@ func toStrings(stack []*big.Int) []string {
 	return strings
 }
 
-func byteToBn(b string) *big.Int {
+func ByteToBn(b string) *big.Int {
 	hx, _ := hex.DecodeString(b)
 	item := fmt.Sprintf("%x", hx[0])
 	bn := new(big.Int)
@@ -22,13 +22,14 @@ func byteToBn(b string) *big.Int {
 	return bn
 }
 
-func twosComps(heads []*big.Int) []*big.Int {
-	heads[0] = twosComp(heads[0])
-	heads[1] = twosComp(heads[1])
+func TwosComps(heads []*big.Int) []*big.Int {
+	for i := range heads {
+		heads[i] = TwosComp(heads[i])
+	}
 	return heads
 }
 
-func twosComp(head *big.Int) *big.Int {
+func TwosComp(head *big.Int) *big.Int {
 	s := fmt.Sprintf("%0*b", 256, head)
 	if string(s[0]) == "1" {
 		bn := flipAdd(s)
@@ -38,7 +39,7 @@ func twosComp(head *big.Int) *big.Int {
 	return head
 }
 
-func convNumber(bn *big.Int) *big.Int {
+func ConvNumber(bn *big.Int) *big.Int {
 	if bn.Cmp(big.NewInt(0)) == -1 {
 		s := fmt.Sprintf("%0*b", 256, bn.Mul(bn, big.NewInt(-1)))
 		bn = flipAdd(s)

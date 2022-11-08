@@ -16,7 +16,7 @@ func ToStrings(stack []*big.Int) []string {
 
 func ByteToBn(b string) *big.Int {
 	hx, _ := hex.DecodeString(b)
-	item := fmt.Sprintf("%x", hx[0])
+	item := fmt.Sprintf("%x", hx)
 	bn := new(big.Int)
 	bn.SetString(item, 16)
 	return bn

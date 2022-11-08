@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"math/big"
 )
@@ -11,6 +12,14 @@ func toStrings(stack []*big.Int) []string {
 		strings = append(strings, s.String())
 	}
 	return strings
+}
+
+func byteToBn(b string) *big.Int {
+	hx, _ := hex.DecodeString(b)
+	item := fmt.Sprintf("%x", hx[0])
+	bn := new(big.Int)
+	bn.SetString(item, 16)
+	return bn
 }
 
 func twosComps(heads []*big.Int) []*big.Int {

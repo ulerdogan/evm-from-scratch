@@ -13,21 +13,28 @@ func toStrings(stack []*big.Int) []string {
 	return strings
 }
 
-func twosComp(heads []*big.Int) []*big.Int {
-	s := fmt.Sprintf("%0*b", 256, heads[0])
-	if string(s[0]) == "1" {
-		bn := flipAdd(s)
-		bn.Mul(bn, big.NewInt(-1))
-		heads[0] = bn
-	}
-
-	s = fmt.Sprintf("%0*b", 256, heads[1])
-	if string(s[0]) == "1" {
-		bn := flipAdd(s)
-		bn.Mul(bn, big.NewInt(-1))
-		heads[1] = bn
-	}
+func twosComps(heads []*big.Int) []*big.Int {
+	heads[0] = twosComp(heads[0])
+	heads[1] = twosComp(heads[1])
 	return heads
+}
+
+func twosComp(head *big.Int) *big.Int {
+	s := fmt.Sprintf("%0*b", 256, head)
+	if string(s[0]) == "1" {
+		bn := flipAdd(s)
+		bn.Mul(bn, big.NewInt(-1))
+		head = bn
+	}
+	return head
+}
+
+func convNumber(bn *big.Int) *big.Int {
+	if bn.Cmp(big.NewInt(0)) == -1 {
+		s := fmt.Sprintf("%0*b", 256, bn.Mul(bn, big.NewInt(-1)))
+		bn = flipAdd(s)
+	}
+	return bn
 }
 
 func flipAdd(s string) *big.Int {

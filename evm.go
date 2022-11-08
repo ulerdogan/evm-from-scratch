@@ -24,7 +24,7 @@ LOOP:
 			stack.s = append([]*big.Int{bn}, stack.s...)
 			pc += pb
 		case 0x50: // POP
-			stack.s = stack.s[1:]
+			_ = stack.getHead()
 		case 0x01: // ADD
 			res := stack.oprHeads(new(big.Int).Add, false)
 			res.Mod(res, max.uint256Max)
@@ -85,6 +85,53 @@ LOOP:
 				bn = big.NewInt(0)
 			}
 			stack.s = append([]*big.Int{bn}, stack.s...)
+		case 0x12, 0x13: // SLT, SGT
+			heads := stack.getHeads()
+			heads = twosComps(heads)
+			fmt.Println(heads[0].String(), heads[1].String())
+			var bn *big.Int
+
+			cmp := 1
+			if opcode == 0x13 {
+				cmp = -1
+			}
+
+			if heads[1].Cmp(heads[0]) == cmp {
+				bn = big.NewInt(1)
+			} else {
+				bn = big.NewInt(0)
+			}
+			stack.s = append([]*big.Int{bn}, stack.s...)
+		case 0x14: // EQ
+			heads := stack.getHeads()
+			var bn *big.Int
+			if heads[1].Cmp(heads[0]) == 0 {
+				bn = big.NewInt(1)
+			} else {
+				bn = big.NewInt(0)
+			}
+			stack.s = append([]*big.Int{bn}, stack.s...)
+		case 0x15: // ISZERO
+			head := stack.getHead()
+			var bn *big.Int
+			bn = big.NewInt(0)
+
+			if head.Cmp(big.NewInt(0)) == 0 {
+				bn = big.NewInt(1)
+			}
+			stack.s = append([]*big.Int{bn}, stack.s...)
+		case 0x16: // AND
+			res := stack.oprHeads(new(big.Int).And, false)
+			stack.s = append([]*big.Int{res}, stack.s...)
+		case 0x17: // OR
+			res := stack.oprHeads(new(big.Int).Or, false)
+			stack.s = append([]*big.Int{res}, stack.s...)
+		case 0x18: // XOR
+			res := stack.oprHeads(new(big.Int).Xor, false)
+			stack.s = append([]*big.Int{res}, stack.s...)
+		case 0x19: // NOT
+			res := stack.oprHead(new(big.Int).Not, true)
+			stack.s = append([]*big.Int{res}, stack.s...)
 		}
 		pc++
 	}

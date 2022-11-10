@@ -9,8 +9,8 @@ func (s *EvmStack) getHeads(n int) []*big.Int {
 	if !s.checkStack(n) {
 		return nil
 	}
-	heads := s.S[0:n]
-	s.S = s.S[n:]
+	heads := s.Stack[0:n]
+	s.Stack = s.Stack[n:]
 	return heads
 }
 
@@ -43,5 +43,23 @@ func (s *EvmStack) oprHead(f func(x *big.Int) *big.Int, signed bool) *big.Int {
 }
 
 func (s *EvmStack) checkStack(n int) bool {
-	return len(s.S) >= n
+	return len(s.Stack) >= n
+}
+
+func (m *EvmMemory) store(offset, value *big.Int) {
+	for i := big.NewInt(0); i.Cmp(big.NewInt(32)) == -1; i.Add(i, big.NewInt(1)) {
+		d := int(i.Add(i, offset).Int64())
+		v := new(big.Int).Sub(big.NewInt(32), i)
+		v.Sub(v, big.NewInt(1)).Mul(v, big.NewInt(8))
+		m.Data[d] = uint8(value.Rsh(value, uint(v.Int64())).And(value, utils.ByteToBn("ff")).Int64())
+	}
+}
+
+func (m *EvmMemory) load(offset *big.Int) *big.Int {
+	value := big.NewInt(0)
+	for i := big.NewInt(0); i.Cmp(big.NewInt(32)) == -1; i.Add(i, big.NewInt(1)) {
+		o := big.NewInt(int64(m.Data[int((offset.Add(offset, i)).Int64())]))
+		value.Lsh(value, 8).Or(value, o)
+	}
+	return value
 }

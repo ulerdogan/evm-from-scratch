@@ -3,5 +3,9 @@ package evm
 import "math/big"
 
 type EvmStack struct {
-	S []*big.Int
+	Stack []*big.Int
+}
+
+type EvmMemory struct {
+	Data []byte
 }

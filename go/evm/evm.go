@@ -11,7 +11,6 @@ func Evm(code []byte) []*big.Int {
 	var stack *EvmStack = &EvmStack{}
 	var memory *EvmMemory = &EvmMemory{}
 	pc := 0
-	_ = memory
 
 LOOP:
 	for pc < len(code) {
@@ -259,6 +258,19 @@ LOOP:
 					break LOOP
 				}
 			}
+		case 0x51: // MLOAD
+			head := stack.getHeads(1)[0]
+			if head == nil {
+				break LOOP
+			}
+			l := memory.load(head)
+			stack.Stack = append([]*big.Int{l}, stack.Stack...)
+		case 0x52, 0x53: // MSTORE, MSTORE8
+			heads := stack.getHeads(2)
+			if heads == nil {
+				break LOOP
+			}
+			memory.store(heads[0], heads[1])
 		}
 		pc++
 	}

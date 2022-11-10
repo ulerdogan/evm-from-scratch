@@ -47,19 +47,18 @@ func (s *EvmStack) checkStack(n int) bool {
 }
 
 func (m *EvmMemory) store(offset, value *big.Int) {
-	for i := big.NewInt(0); i.Cmp(big.NewInt(32)) == -1; i.Add(i, big.NewInt(1)) {
-		d := int(i.Add(i, offset).Int64())
-		v := new(big.Int).Sub(big.NewInt(32), i)
-		v.Sub(v, big.NewInt(1)).Mul(v, big.NewInt(8))
-		m.Data[d] = uint8(value.Rsh(value, uint(v.Int64())).And(value, utils.ByteToBn("ff")).Int64())
+	for i := 0; i < 32; i++ {
+		k := i + int(offset.Int64())
+		rsh := new(big.Int).Rsh(value, uint(8*(31-i)))
+		v := rsh.And(rsh, utils.ByteToBn("ff")).Int64()
+		m.Data[k] = byte(v)
 	}
 }
 
 func (m *EvmMemory) load(offset *big.Int) *big.Int {
 	value := big.NewInt(0)
-	for i := big.NewInt(0); i.Cmp(big.NewInt(32)) == -1; i.Add(i, big.NewInt(1)) {
-		o := big.NewInt(int64(m.Data[int((offset.Add(offset, i)).Int64())]))
-		value.Lsh(value, 8).Or(value, o)
+	for i := 0; i < 32; i++ {
+		value.Or(value.Lsh(value, 8), big.NewInt(int64(m.Data[int(offset.Int64())+i])))
 	}
 	return value
 }

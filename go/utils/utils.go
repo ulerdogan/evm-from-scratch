@@ -51,6 +51,10 @@ func ConvNumber(bn *big.Int) *big.Int {
 	return bn
 }
 
+func Keccak256(bn *big.Int) *big.Int {
+	return nil
+}
+
 func flipAdd(s string) *big.Int {
 	str := flipStr(s)
 	bn, _ := new(big.Int).SetString(str, 2)

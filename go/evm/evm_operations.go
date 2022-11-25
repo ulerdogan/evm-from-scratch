@@ -77,11 +77,11 @@ func (m *EvmMemory) store(offset, size int, value *big.Int) {
 	}
 }
 
-func (m *EvmMemory) load(offset int) *big.Int {
+func (m *EvmMemory) load(offset, size int) *big.Int {
 	m.expand(offset, 32)
 
 	item := ""
-	for i := offset; i < offset+32; i++ {
+	for i := offset; i < offset+size; i++ {
 		hx := utils.ToHex(m.Data[i])
 		if len(hx) == 1 {
 			hx = "0" + hx

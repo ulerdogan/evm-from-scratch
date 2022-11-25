@@ -241,7 +241,7 @@ LOOP:
 			if head == nil {
 				break LOOP
 			}
-			l := memory.load(int(head.Int64()))
+			l := memory.load(int(head.Int64()), 32)
 			stack.Stack = append([]*big.Int{l}, stack.Stack...)
 		case MSTORE, MSTORE8:
 			heads := stack.getHeads(2)
@@ -257,6 +257,15 @@ LOOP:
 			memory.store(int(heads[0].Int64()), size, heads[1])
 		case MSIZE:
 			bn := big.NewInt(int64(len(memory.Data)))
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+		case SHA3:
+			heads := stack.getHeads(2)
+			if heads == nil {
+				break LOOP
+			}
+
+			m := memory.load(int(heads[0].Int64()), int(heads[1].Int64()))
+			bn := utils.Keccak256(m)
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
 		}
 		pc++

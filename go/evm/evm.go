@@ -3,7 +3,6 @@ package evm
 import (
 	"evm-from-scratch-go/domain"
 	"evm-from-scratch-go/utils"
-	"fmt"
 	"math/big"
 )
 
@@ -22,28 +21,28 @@ LOOP:
 			break LOOP
 		case 0x60: // PUSH1
 			pb := 1
-			item := fmt.Sprintf("%x", code[pc+1:pc+1+pb])
+			item := utils.ToHex(code[pc+1 : pc+1+pb])
 			bn := new(big.Int)
 			bn.SetString(item, 16)
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
 			pc += pb
 		case 0x61: // PUSH2
 			pb := 2
-			item := fmt.Sprintf("%x", code[pc+1:pc+1+pb])
+			item := utils.ToHex(code[pc+1 : pc+1+pb])
 			bn := new(big.Int)
 			bn.SetString(item, 16)
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
 			pc += pb
 		case 0x62: // PUSH3
 			pb := 3
-			item := fmt.Sprintf("%x", code[pc+1:pc+1+pb])
+			item := utils.ToHex(code[pc+1 : pc+1+pb])
 			bn := new(big.Int)
 			bn.SetString(item, 16)
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
 			pc += pb
 		case 0x7f: // PUSH32
 			pb := 32
-			item := fmt.Sprintf("%x", code[pc+1:pc+1+pb])
+			item := utils.ToHex(code[pc+1 : pc+1+pb])
 			bn := new(big.Int)
 			bn.SetString(item, 16)
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
@@ -243,7 +242,7 @@ LOOP:
 				break LOOP
 			}
 			pc = int(head.Int64())
-			if fmt.Sprintf("%x", code[pc]) != "5b" {
+			if utils.ToHex(code[pc]) != "5b" {
 				break LOOP
 			}
 		case 0x57: // JUMP1
@@ -252,7 +251,7 @@ LOOP:
 				break LOOP
 			}
 			if heads[1].Cmp(big.NewInt(0)) != 0 {
-				if fmt.Sprintf("%x", code[int(heads[0].Int64())]) == "5b" {
+				if utils.ToHex(code[int(heads[0].Int64())]) == "5b" {
 					pc = int(heads[0].Int64())
 				} else {
 					break LOOP
@@ -263,14 +262,20 @@ LOOP:
 			if head == nil {
 				break LOOP
 			}
-			l := memory.load(head)
+			l := memory.load(int(head.Int64()))
 			stack.Stack = append([]*big.Int{l}, stack.Stack...)
 		case 0x52, 0x53: // MSTORE, MSTORE8
 			heads := stack.getHeads(2)
 			if heads == nil {
 				break LOOP
 			}
-			memory.store(heads[0], heads[1])
+
+			size := 32
+			if opcode == 0x53 {
+				size = 1
+			}
+
+			memory.store(int(heads[0].Int64()), size, heads[1])
 		}
 		pc++
 	}

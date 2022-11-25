@@ -14,9 +14,13 @@ func ToStrings(stack []*big.Int) []string {
 	return strings
 }
 
+func ToHex(bn interface{}) string {
+	return fmt.Sprintf("%x", bn)
+}
+
 func ByteToBn(b string) *big.Int {
 	hx, _ := hex.DecodeString(b)
-	item := fmt.Sprintf("%x", hx)
+	item := ToHex(hx)
 	bn := new(big.Int)
 	bn.SetString(item, 16)
 	return bn

@@ -1,7 +1,10 @@
 package evm
 
 import (
+	"encoding/hex"
 	"evm-from-scratch-go/utils"
+	"fmt"
+	"math"
 	"math/big"
 )
 
@@ -46,19 +49,47 @@ func (s *EvmStack) checkStack(n int) bool {
 	return len(s.Stack) >= n
 }
 
-func (m *EvmMemory) store(offset, value *big.Int) {
-	for i := 0; i < 32; i++ {
-		k := i + int(offset.Int64())
-		rsh := new(big.Int).Rsh(value, uint(8*(31-i)))
-		v := rsh.And(rsh, utils.ByteToBn("ff")).Int64()
-		m.Data[k] = byte(v)
+func (m *EvmMemory) expand(offset int) {
+	expansion := (float64(offset) + 32) / 32
+	expansion = math.Ceil(expansion)
+	n := int(expansion) * 32
+
+	if n > cap(m.Data) {
+		d := make([]byte, n)
+		copy(d[0:len(m.Data)], m.Data[:])
+		m.Data = d
 	}
 }
 
-func (m *EvmMemory) load(offset *big.Int) *big.Int {
-	value := big.NewInt(0)
-	for i := 0; i < 32; i++ {
-		value.Or(value.Lsh(value, 8), big.NewInt(int64(m.Data[int(offset.Int64())+i])))
+func (m *EvmMemory) store(offset, size int, value *big.Int) {
+	m.expand(offset)
+
+	hx := utils.ToHex(value)
+	if len(hx) > 64 {
+		hx = hx[len(hx)-size*2:]
+	} else {
+		hx = fmt.Sprintf("%0*s", size*2, hx)
 	}
+
+	arr, _ := hex.DecodeString(hx)
+	for i, v := range arr {
+		m.Data[offset+i] = v
+	}
+}
+
+func (m *EvmMemory) load(offset int) *big.Int {
+	m.expand(offset)
+
+	item := ""
+	for i := offset; i < offset+32; i++ {
+		hx := utils.ToHex(m.Data[i])
+		if len(hx) == 1 {
+			hx = "0" + hx
+		}
+		item = item + hx
+	}
+
+	value := big.NewInt(0)
+	value.SetString(item, 16)
 	return value
 }

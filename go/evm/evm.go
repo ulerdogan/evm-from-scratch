@@ -17,63 +17,63 @@ LOOP:
 
 	SWITCH:
 		switch opcode {
-		case 00: // STOP
+		case STOP:
 			break LOOP
-		case 0x60: // PUSH1
+		case PUSH1:
 			pb := 1
 			item := utils.ToHex(code[pc+1 : pc+1+pb])
 			bn := new(big.Int)
 			bn.SetString(item, 16)
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
 			pc += pb
-		case 0x61: // PUSH2
+		case PUSH2:
 			pb := 2
 			item := utils.ToHex(code[pc+1 : pc+1+pb])
 			bn := new(big.Int)
 			bn.SetString(item, 16)
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
 			pc += pb
-		case 0x62: // PUSH3
+		case PUSH3:
 			pb := 3
 			item := utils.ToHex(code[pc+1 : pc+1+pb])
 			bn := new(big.Int)
 			bn.SetString(item, 16)
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
 			pc += pb
-		case 0x7f: // PUSH32
+		case PUSH32:
 			pb := 32
 			item := utils.ToHex(code[pc+1 : pc+1+pb])
 			bn := new(big.Int)
 			bn.SetString(item, 16)
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
 			pc += pb
-		case 0x50: // POP
+		case POP:
 			head := stack.getHeads(1)[0]
 			if head == nil {
 				break LOOP
 			}
-		case 0x01: // ADD
+		case ADD:
 			res := stack.oprHeads(new(big.Int).Add, false)
 			if res == nil {
 				break LOOP
 			}
 			res.Mod(res, domain.Max.Uint256Max)
 			stack.Stack = append([]*big.Int{res}, stack.Stack...)
-		case 0x02: // MUL
+		case MUL:
 			res := stack.oprHeads(new(big.Int).Mul, false)
 			if res == nil {
 				break LOOP
 			}
 			res.Mod(res, domain.Max.Uint256Max)
 			stack.Stack = append([]*big.Int{res}, stack.Stack...)
-		case 0x03: // SUB
+		case SUB:
 			res := stack.oprHeads(new(big.Int).Sub, false)
 			if res == nil {
 				break LOOP
 			}
 			res.Mod(res, domain.Max.Uint256Max)
 			stack.Stack = append([]*big.Int{res}, stack.Stack...)
-		case 0x04, 0x05: // DIV, SDIV
+		case DIV, SDIV:
 			var res *big.Int
 			if stack.Stack[1].String() == "0" {
 				stack.Stack = stack.Stack[2:]
@@ -89,7 +89,7 @@ LOOP:
 				}
 			}
 			stack.Stack = append([]*big.Int{res}, stack.Stack...)
-		case 0x06, 0x07: // MOD, SMOD
+		case MOD, SMOD:
 			var res *big.Int
 			if stack.Stack[1].String() == "0" {
 				stack.Stack = stack.Stack[2:]
@@ -105,7 +105,7 @@ LOOP:
 				}
 			}
 			stack.Stack = append([]*big.Int{res}, stack.Stack...)
-		case 0x10, 0x11: // LT, GT
+		case LT, GT:
 			heads := stack.getHeads(2)
 			if heads == nil {
 				break LOOP
@@ -124,7 +124,7 @@ LOOP:
 				bn = big.NewInt(0)
 			}
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
-		case 0x12, 0x13: // SLT, SGT
+		case SLT, SGT:
 			heads := stack.getHeads(2)
 			if heads == nil {
 				break LOOP
@@ -144,7 +144,7 @@ LOOP:
 				bn = big.NewInt(0)
 			}
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
-		case 0x14: // EQ
+		case EQ:
 			heads := stack.getHeads(2)
 			if heads == nil {
 				break LOOP
@@ -157,7 +157,7 @@ LOOP:
 				bn = big.NewInt(0)
 			}
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
-		case 0x15: // ISZERO
+		case ISZERO:
 			head := stack.getHeads(1)[0]
 			if head == nil {
 				break LOOP
@@ -169,31 +169,31 @@ LOOP:
 				bn = big.NewInt(1)
 			}
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
-		case 0x16: // AND
+		case AND:
 			res := stack.oprHeads(new(big.Int).And, false)
 			if res == nil {
 				break LOOP
 			}
 			stack.Stack = append([]*big.Int{res}, stack.Stack...)
-		case 0x17: // OR
+		case OR:
 			res := stack.oprHeads(new(big.Int).Or, false)
 			if res == nil {
 				break LOOP
 			}
 			stack.Stack = append([]*big.Int{res}, stack.Stack...)
-		case 0x18: // XOR
+		case XOR:
 			res := stack.oprHeads(new(big.Int).Xor, false)
 			if res == nil {
 				break LOOP
 			}
 			stack.Stack = append([]*big.Int{res}, stack.Stack...)
-		case 0x19: // NOT
+		case NOT:
 			res := stack.oprHead(new(big.Int).Not, true)
 			if res == nil {
 				break LOOP
 			}
 			stack.Stack = append([]*big.Int{res}, stack.Stack...)
-		case 0x1a: // BYTE
+		case BYTE:
 			heads := stack.getHeads(2)
 			if heads == nil {
 				break LOOP
@@ -204,39 +204,39 @@ LOOP:
 			bn := utils.ByteToBn("ff")
 			res = new(big.Int).And(res, bn)
 			stack.Stack = append([]*big.Int{res}, stack.Stack...)
-		case 0x80: // DUP1
+		case DUP1:
 			head := stack.getHeads(1)[0]
 			if head == nil {
 				break LOOP
 			}
 			stack.Stack = append([]*big.Int{head, head}, stack.Stack...)
-		case 0x82: // DUP3
+		case DUP3:
 			heads := stack.getHeads(3)
 			if heads == nil {
 				break LOOP
 			}
 			stack.Stack = append([]*big.Int{heads[2], heads[0], heads[1], heads[2]}, stack.Stack...)
-		case 0x90: // SWAP1
+		case SWAP1:
 			heads := stack.getHeads(2)
 			if heads == nil {
 				break LOOP
 			}
 			stack.Stack = append([]*big.Int{heads[1], heads[0]}, stack.Stack...)
-		case 0x92: // SWAP3
+		case SWAP3:
 			heads := stack.getHeads(4)
 			if heads == nil {
 				break LOOP
 			}
 			stack.Stack = append([]*big.Int{heads[3], heads[1], heads[2], heads[0]}, stack.Stack...)
-		case 0xfe: // INVALID
+		case INVALID:
 			break SWITCH
-		case 0x58: // PC
+		case PC:
 			bn := big.NewInt(int64(pc))
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
-		case 0x5a: // GAS
+		case GAS:
 			bn := utils.ByteToBn("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
-		case 0x56: // JUMP
+		case JUMP:
 			head := stack.getHeads(1)[0]
 			if head == nil {
 				break LOOP
@@ -245,7 +245,7 @@ LOOP:
 			if utils.ToHex(code[pc]) != "5b" {
 				break LOOP
 			}
-		case 0x57: // JUMP1
+		case JUMPI:
 			heads := stack.getHeads(2)
 			if heads == nil {
 				break LOOP
@@ -257,14 +257,14 @@ LOOP:
 					break LOOP
 				}
 			}
-		case 0x51: // MLOAD
+		case MLOAD: // MLOAD
 			head := stack.getHeads(1)[0]
 			if head == nil {
 				break LOOP
 			}
 			l := memory.load(int(head.Int64()))
 			stack.Stack = append([]*big.Int{l}, stack.Stack...)
-		case 0x52, 0x53: // MSTORE, MSTORE8
+		case MSTORE, MSTORE8:
 			heads := stack.getHeads(2)
 			if heads == nil {
 				break LOOP
@@ -276,7 +276,7 @@ LOOP:
 			}
 
 			memory.store(int(heads[0].Int64()), size, heads[1])
-		case 0x59: // MSIZE
+		case MSIZE:
 			bn := big.NewInt(int64(len(memory.Data)))
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
 		}

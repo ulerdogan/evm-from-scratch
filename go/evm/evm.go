@@ -276,6 +276,9 @@ LOOP:
 			}
 
 			memory.store(int(heads[0].Int64()), size, heads[1])
+		case 0x59: // MSIZE
+			bn := big.NewInt(int64(len(memory.Data)))
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
 		}
 		pc++
 	}

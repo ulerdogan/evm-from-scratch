@@ -49,8 +49,8 @@ func (s *EvmStack) checkStack(n int) bool {
 	return len(s.Stack) >= n
 }
 
-func (m *EvmMemory) expand(offset int) {
-	expansion := (float64(offset) + 32) / 32
+func (m *EvmMemory) expand(offset, size int) {
+	expansion := (float64(offset) + float64(size)) / 32
 	expansion = math.Ceil(expansion)
 	n := int(expansion) * 32
 
@@ -62,7 +62,7 @@ func (m *EvmMemory) expand(offset int) {
 }
 
 func (m *EvmMemory) store(offset, size int, value *big.Int) {
-	m.expand(offset)
+	m.expand(offset, size)
 
 	hx := utils.ToHex(value)
 	if len(hx) > 64 {
@@ -78,7 +78,7 @@ func (m *EvmMemory) store(offset, size int, value *big.Int) {
 }
 
 func (m *EvmMemory) load(offset int) *big.Int {
-	m.expand(offset)
+	m.expand(offset, 32)
 
 	item := ""
 	for i := offset; i < offset+32; i++ {

@@ -19,29 +19,8 @@ LOOP:
 		switch opcode {
 		case STOP:
 			break LOOP
-		case PUSH1:
-			pb := 1
-			item := utils.ToHex(code[pc+1 : pc+1+pb])
-			bn := new(big.Int)
-			bn.SetString(item, 16)
-			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
-			pc += pb
-		case PUSH2:
-			pb := 2
-			item := utils.ToHex(code[pc+1 : pc+1+pb])
-			bn := new(big.Int)
-			bn.SetString(item, 16)
-			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
-			pc += pb
-		case PUSH3:
-			pb := 3
-			item := utils.ToHex(code[pc+1 : pc+1+pb])
-			bn := new(big.Int)
-			bn.SetString(item, 16)
-			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
-			pc += pb
-		case PUSH32:
-			pb := 32
+		case PUSH1, PUSH2, PUSH3, PUSH32:
+			pb := int(opcode - 95)
 			item := utils.ToHex(code[pc+1 : pc+1+pb])
 			bn := new(big.Int)
 			bn.SetString(item, 16)
@@ -257,7 +236,7 @@ LOOP:
 					break LOOP
 				}
 			}
-		case MLOAD: // MLOAD
+		case MLOAD:
 			head := stack.getHeads(1)[0]
 			if head == nil {
 				break LOOP

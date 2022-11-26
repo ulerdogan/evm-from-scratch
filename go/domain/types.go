@@ -6,6 +6,8 @@ import (
 
 type TestCase struct {
 	Name   string
+	State  map[string]AccState
+	Block  BlockInfo
 	Tx     TxData
 	Code   code
 	Expect expect
@@ -14,6 +16,19 @@ type TestCase struct {
 type code struct {
 	Bin string
 	Asm string
+}
+
+type AccState struct {
+	Balance string
+}
+
+type BlockInfo struct {
+	Coinbase   string
+	Timestamp  string
+	Number     string
+	Difficulty string
+	GasLimit   string
+	ChainId    string
 }
 
 type TxData struct {

@@ -21,6 +21,10 @@ func ToHex(bn interface{}) string {
 
 func HexToBn(str string) *big.Int {
 	bn := new(big.Int)
+	if str == "" || str == "0x" {
+		return big.NewInt(0)
+	}
+	
 	if str[:2] == "0x" {
 		bn, _ = bn.SetString(str[2:], 16)
 		return bn

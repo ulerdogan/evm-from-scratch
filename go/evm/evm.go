@@ -3,10 +3,11 @@ package evm
 import (
 	"evm-from-scratch-go/domain"
 	"evm-from-scratch-go/utils"
+	"fmt"
 	"math/big"
 )
 
-func Evm(code []byte, tx *domain.TxData) []*big.Int {
+func Evm(code []byte, state map[string]domain.AccState, block *domain.BlockInfo, tx *domain.TxData) []*big.Int {
 	var stack *EvmStack = &EvmStack{}
 	var memory *EvmMemory = &EvmMemory{}
 	pc := 0
@@ -19,7 +20,7 @@ LOOP:
 		switch opcode {
 		case STOP:
 			break LOOP
-		case PUSH1, PUSH2, PUSH3, PUSH32:
+		case PUSH1, PUSH2, PUSH3, PUSH20, PUSH32:
 			pb := int(opcode - 95)
 			item := utils.ToHex(code[pc+1 : pc+1+pb])
 			bn := utils.HexToBn(item)
@@ -272,6 +273,41 @@ LOOP:
 		case CALLER:
 			bn := utils.HexToBn(tx.From)
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+		case BALANCE:
+			head := stack.getHeads(1)[0]
+			addr := fmt.Sprintf("0x%s", utils.ToHex(head))
+			balance := state[addr].Balance
+
+			bn := utils.HexToBn(balance)
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+		case ORIGIN:
+			bn := utils.HexToBn(tx.Origin)
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+		case COINBASE:
+			bn := utils.HexToBn(block.Coinbase)
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+		case TIMESTAMP:
+			bn := utils.HexToBn(block.Timestamp)
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+		case NUMBER:
+			bn := utils.HexToBn(block.Number)
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+		case DIFFICULTY:
+			bn := utils.HexToBn(block.Difficulty)
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+		case GASLIMIT:
+			bn := utils.HexToBn(block.GasLimit)
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+		case GASPRICE:
+			bn := utils.HexToBn(tx.GasPrice)
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+		case CHAINID:
+			bn := utils.HexToBn(block.ChainId)
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+		case CALLVALUE:
+			bn := utils.HexToBn(tx.Value)
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+		//case CALLDATALOAD:
 		}
 		pc++
 	}

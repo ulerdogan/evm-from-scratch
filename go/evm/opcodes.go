@@ -67,6 +67,7 @@ const (
 	PUSH1          byte = 0x60
 	PUSH2          byte = 0x61
 	PUSH3          byte = 0x62
+	PUSH20         byte = 0x73
 	PUSH32         byte = 0x7f
 	DUP1           byte = 0x80
 	DUP3           byte = 0x82

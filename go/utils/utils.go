@@ -24,7 +24,7 @@ func HexToBn(str string) *big.Int {
 	if str == "" || str == "0x" {
 		return big.NewInt(0)
 	}
-	
+
 	if str[:2] == "0x" {
 		bn, _ = bn.SetString(str[2:], 16)
 		return bn
@@ -38,6 +38,17 @@ func ByteToBn(b string) *big.Int {
 	item := ToHex(hx)
 	bn := HexToBn(item)
 	return bn
+}
+
+func PadRight(data string, amount int) string {
+	for len(data) < amount {
+		data = data + "0"
+	}
+	return data
+}
+
+func PadLeft(data string, amount int) string {
+	return fmt.Sprintf("%0*s", amount, data)
 }
 
 func TwosComps(heads []*big.Int) []*big.Int {

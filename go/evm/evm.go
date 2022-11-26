@@ -275,6 +275,10 @@ LOOP:
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
 		case BALANCE:
 			head := stack.getHeads(1)[0]
+			if head == nil {
+				break LOOP
+			}
+
 			addr := fmt.Sprintf("0x%s", utils.ToHex(head))
 			balance := state[addr].Balance
 
@@ -307,7 +311,30 @@ LOOP:
 		case CALLVALUE:
 			bn := utils.HexToBn(tx.Value)
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
-		//case CALLDATALOAD:
+		case CALLDATALOAD:
+			head := stack.getHeads(1)[0]
+			if head == nil {
+				break LOOP
+			}
+
+			data := tx.Data[int(head.Int64())*2:]
+			data = utils.PadRight(data, 64)
+
+			bn := new(big.Int)
+			bn.SetString(data, 16)
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+		case CALLDATASIZE:
+			size := len(tx.Data)
+			bn := big.NewInt(int64(size) / 2)
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+		case CALLDATACOPY:
+			heads := stack.getHeads(3)
+			data := tx.Data[heads[1].Int64()*2 : (heads[1].Int64()+heads[2].Int64())*2]
+			data = utils.PadRight(data, 64)
+
+			bn := new(big.Int)
+			bn.SetString(data, 16)
+			memory.store(int(heads[0].Int64()), int(heads[2].Int64()), bn)
 		}
 		pc++
 	}

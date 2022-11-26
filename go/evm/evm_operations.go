@@ -3,7 +3,6 @@ package evm
 import (
 	"encoding/hex"
 	"evm-from-scratch-go/utils"
-	"fmt"
 	"math"
 	"math/big"
 )
@@ -68,7 +67,7 @@ func (m *EvmMemory) store(offset, size int, value *big.Int) {
 	if len(hx) > 64 {
 		hx = hx[len(hx)-size*2:]
 	} else {
-		hx = fmt.Sprintf("%0*s", size*2, hx)
+		hx = utils.PadLeft(hx, size*2)
 	}
 
 	arr, _ := hex.DecodeString(hx)

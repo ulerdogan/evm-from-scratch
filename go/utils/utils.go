@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/hex"
 	"fmt"
+	"golang.org/x/crypto/sha3"
 	"math/big"
 )
 
@@ -52,7 +53,10 @@ func ConvNumber(bn *big.Int) *big.Int {
 }
 
 func Keccak256(bn *big.Int) *big.Int {
-	return nil
+	h := sha3.NewLegacyKeccak256()
+	h.Write(bn.Bytes())
+	sum := h.Sum(nil)
+	return big.NewInt(0).SetBytes(sum)
 }
 
 func flipAdd(s string) *big.Int {

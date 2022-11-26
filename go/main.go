@@ -3,6 +3,7 @@
  * implemented in Go by restructring the draft
  * from "github.com/w1nt3r-eth/evm-from-scratch"
  * check README for the program details
+ *
  * @author "github.com/ulerdogan"
  * to run ```go run .```
  */
@@ -49,10 +50,7 @@ func main() {
 			expectedStack = append(expectedStack, i)
 		}
 
-		// Note: as the test cases get more complex, you'll need to modify this
-		// to pass down more arguments to the evm function and return more than
-		// just the stack.
-		stack := evm.Evm(bin)
+		stack := evm.Evm(bin, &test.Tx)
 
 		match := len(stack) == len(expectedStack)
 		if match {

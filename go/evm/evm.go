@@ -6,7 +6,7 @@ import (
 	"math/big"
 )
 
-func Evm(code []byte) []*big.Int {
+func Evm(code []byte, tx *domain.TxData) []*big.Int {
 	var stack *EvmStack = &EvmStack{}
 	var memory *EvmMemory = &EvmMemory{}
 	pc := 0
@@ -22,8 +22,7 @@ LOOP:
 		case PUSH1, PUSH2, PUSH3, PUSH32:
 			pb := int(opcode - 95)
 			item := utils.ToHex(code[pc+1 : pc+1+pb])
-			bn := new(big.Int)
-			bn.SetString(item, 16)
+			bn := utils.HexToBn(item)
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
 			pc += pb
 		case POP:
@@ -266,6 +265,12 @@ LOOP:
 
 			m := memory.load(int(heads[0].Int64()), int(heads[1].Int64()))
 			bn := utils.Keccak256(m)
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+		case ADDRESS:
+			bn := utils.HexToBn(tx.To)
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+		case CALLER:
+			bn := utils.HexToBn(tx.From)
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
 		}
 		pc++

@@ -6,6 +6,7 @@ import (
 
 type TestCase struct {
 	Name   string
+	Tx     TxData
 	Code   code
 	Expect expect
 }
@@ -13,6 +14,15 @@ type TestCase struct {
 type code struct {
 	Bin string
 	Asm string
+}
+
+type TxData struct {
+	From     string
+	To       string
+	Origin   string
+	GasPrice string
+	Value    string
+	Data     string
 }
 
 type maxNums struct {

@@ -89,7 +89,6 @@ func (m *EvmMemory) load(offset, size int) *big.Int {
 		item = item + hx
 	}
 
-	value := big.NewInt(0)
-	value.SetString(item, 16)
+	value := utils.HexToBn(item)
 	return value
 }

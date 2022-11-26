@@ -19,11 +19,20 @@ func ToHex(bn interface{}) string {
 	return fmt.Sprintf("%x", bn)
 }
 
+func HexToBn(str string) *big.Int {
+	bn := new(big.Int)
+	if str[:2] == "0x" {
+		bn, _ = bn.SetString(str[2:], 16)
+		return bn
+	}
+	bn, _ = bn.SetString(str, 16)
+	return bn
+}
+
 func ByteToBn(b string) *big.Int {
 	hx, _ := hex.DecodeString(b)
 	item := ToHex(hx)
-	bn := new(big.Int)
-	bn.SetString(item, 16)
+	bn := HexToBn(item)
 	return bn
 }
 

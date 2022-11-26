@@ -329,12 +329,20 @@ LOOP:
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
 		case CALLDATACOPY:
 			heads := stack.getHeads(3)
+			if heads == nil {
+				break LOOP
+			}
+
 			data := tx.Data[heads[1].Int64()*2 : (heads[1].Int64()+heads[2].Int64())*2]
 			data = utils.PadRight(data, 64)
 
 			bn := new(big.Int)
 			bn.SetString(data, 16)
 			memory.store(int(heads[0].Int64()), int(heads[2].Int64()), bn)
+		case CODESIZE:
+			size := len(code)
+			bn := big.NewInt(int64(size))
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
 		}
 		pc++
 	}

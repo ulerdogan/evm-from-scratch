@@ -343,26 +343,26 @@ LOOP:
 			size := len(code)
 			bn := big.NewInt(int64(size))
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
-		case CODECOPY: // FIXME:
+		case CODECOPY:
 			heads := stack.getHeads(3)
 			if heads == nil {
 				break LOOP
 			}
-
-			// if int(heads[2].Int64()) > len(code) {
-			// 	heads[2] = big.NewInt(int64(len(code)))
-			// }
+			if int(heads[2].Int64()) > len(code) {
+				heads[2] = big.NewInt(int64(len(code)))
+			}
 
 			end := int(heads[1].Int64()) + int(heads[2].Int64())
-			if end >= len(code) {
+			if end > len(code) {
 				end = len(code) - 1
 			}
+
 			data := code[int(heads[1].Int64()):end]
-			str := utils.PadRight(string(data), len(data))
-			data = []byte(str)
-			bn := new(big.Int)
-			bn.SetBytes(data)
-			memory.store(int(heads[1].Int64()), len(data), bn)
+			str := utils.ToHex(data)
+			str = utils.PadRight(str, len(data))
+
+			bn := utils.HexToBn(str)
+			memory.store(int(heads[0].Int64()), int(heads[2].Int64()), bn)
 		case EXTCODESIZE:
 			head := stack.getHeads(1)[0]
 			if head == nil {
@@ -371,7 +371,7 @@ LOOP:
 
 			addr := fmt.Sprintf("0x%s", utils.ToHex(head))
 			len := len(state[addr].Code.Bin) / 2
-			
+
 			bn := big.NewInt(int64(len))
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
 		case EXTCODECOPY: // FIXME:
@@ -382,7 +382,7 @@ LOOP:
 
 			addr := fmt.Sprintf("0x%s", utils.ToHex(heads[0]))
 			extc := state[addr].Code.Bin
-			extc = extc[int(heads[2].Int64())*2:(int(heads[2].Int64()) + int(heads[3].Int64()))*2]
+			extc = extc[int(heads[2].Int64())*2 : (int(heads[2].Int64())+int(heads[3].Int64()))*2]
 			extc = utils.PadRight(extc, int(heads[3].Int64())*2)
 			bn, _ := new(big.Int).SetString(extc, 16)
 

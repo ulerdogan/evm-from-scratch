@@ -1,6 +1,7 @@
 package evm
 
 import (
+	"encoding/hex"
 	"evm-from-scratch-go/domain"
 	"evm-from-scratch-go/utils"
 	"fmt"
@@ -348,18 +349,19 @@ LOOP:
 			if heads == nil {
 				break LOOP
 			}
+
 			if int(heads[2].Int64()) > len(code) {
 				heads[2] = big.NewInt(int64(len(code)))
 			}
 
 			end := int(heads[1].Int64()) + int(heads[2].Int64())
 			if end > len(code) {
-				end = len(code) - 1
+				end = len(code)
 			}
 
 			data := code[int(heads[1].Int64()):end]
 			str := utils.ToHex(data)
-			str = utils.PadRight(str, len(data))
+			str = utils.PadRight(str, int(heads[2].Int64()))
 
 			bn := utils.HexToBn(str)
 			memory.store(int(heads[0].Int64()), int(heads[2].Int64()), bn)
@@ -374,7 +376,7 @@ LOOP:
 
 			bn := big.NewInt(int64(len))
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
-		case EXTCODECOPY: // FIXME:
+		case EXTCODECOPY:
 			heads := stack.getHeads(4)
 			if heads == nil {
 				break LOOP
@@ -382,10 +384,22 @@ LOOP:
 
 			addr := fmt.Sprintf("0x%s", utils.ToHex(heads[0]))
 			extc := state[addr].Code.Bin
-			extc = extc[int(heads[2].Int64())*2 : (int(heads[2].Int64())+int(heads[3].Int64()))*2]
-			extc = utils.PadRight(extc, int(heads[3].Int64())*2)
-			bn, _ := new(big.Int).SetString(extc, 16)
+			hx, _ := hex.DecodeString(extc)
 
+			if int(heads[3].Int64()) > len(hx) {
+				heads[3] = big.NewInt(int64(len(hx)))
+			}
+
+			end := int(heads[2].Int64()) + int(heads[3].Int64())
+			if end > len(hx) {
+				end = len(hx)
+			}
+
+			data := hx[int(heads[2].Int64()):end]
+			str := utils.ToHex(data)
+			str = utils.PadRight(str, int(heads[3].Int64()))
+
+			bn := utils.HexToBn(str)
 			memory.store(int(heads[1].Int64()), int(heads[3].Int64()), bn)
 		case SELFBALANCE:
 			addr := tx.To

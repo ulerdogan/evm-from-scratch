@@ -20,6 +20,7 @@ type code struct {
 
 type AccState struct {
 	Balance string
+	Code code
 }
 
 type BlockInfo struct {

@@ -42,6 +42,12 @@ type TxData struct {
 	Data     string
 }
 
+type Logs struct {
+	Address string
+	Data string
+	Topics []string
+}
+
 type maxNums struct {
 	Uint256Max *big.Int
 }

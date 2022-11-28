@@ -12,6 +12,7 @@ func Evm(code []byte, state map[string]domain.AccState, block *domain.BlockInfo,
 	var stack *EvmStack = &EvmStack{}
 	var memory *EvmMemory = &EvmMemory{}
 	var storage map[string]*big.Int = make(map[string]*big.Int)
+	var logs *domain.Logs = &domain.Logs{}
 	pc := 0
 
 LOOP:
@@ -60,7 +61,7 @@ LOOP:
 				stack.Stack = stack.Stack[2:]
 				res = big.NewInt(0)
 			} else {
-				if opcode == 0x04 {
+				if opcode == DIV {
 					res = stack.oprHeads(new(big.Int).Div, false)
 				} else {
 					res = stack.oprHeads(new(big.Int).Div, true)
@@ -76,7 +77,7 @@ LOOP:
 				stack.Stack = stack.Stack[2:]
 				res = big.NewInt(0)
 			} else {
-				if opcode == 0x06 {
+				if opcode == MOD {
 					res = stack.oprHeads(new(big.Int).Rem, false)
 				} else {
 					res = stack.oprHeads(new(big.Int).Rem, true)
@@ -95,7 +96,7 @@ LOOP:
 			var bn *big.Int
 
 			cmp := 1
-			if opcode == 0x11 {
+			if opcode == GT {
 				cmp = -1
 			}
 
@@ -115,7 +116,7 @@ LOOP:
 			var bn *big.Int
 
 			cmp := 1
-			if opcode == 0x13 {
+			if opcode == SGT {
 				cmp = -1
 			}
 
@@ -252,7 +253,7 @@ LOOP:
 			}
 
 			size := 32
-			if opcode == 0x53 {
+			if opcode == MSTORE8 {
 				size = 1
 			}
 
@@ -425,6 +426,21 @@ LOOP:
 				break LOOP
 			}
 			storage[heads[0].String()] = heads[1]
+		case LOG0, LOG1, LOG2, LOG3, LOG4:
+			heads := stack.getHeads(int(opcode) - 158)
+			if heads == nil {
+				break LOOP
+			}
+
+			logs.Address = tx.To
+			logs.Data = memory.load(int(heads[0].Int64()), int(heads[1].Int64())).String()
+			
+			if opcode > 160 {
+				topics := heads[2:]
+				for i := range topics {
+					logs.Topics = append(logs.Topics, topics[i].String())
+				}
+			}
 		}
 		pc++
 	}

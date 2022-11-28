@@ -49,6 +49,7 @@ type Logs struct {
 }
 
 type Result struct {
+	Stack []*big.Int
 	Return string
 	Success bool
 }

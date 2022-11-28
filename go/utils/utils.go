@@ -19,6 +19,10 @@ func ToHex(bn interface{}) string {
 	return fmt.Sprintf("%x", bn)
 }
 
+func ToAddress(bn *big.Int) string {
+	return ("0x" + ToHex(bn))
+}
+
 func HexToBn(str string) *big.Int {
 	bn := new(big.Int)
 	if str == "" || str == "0x" {

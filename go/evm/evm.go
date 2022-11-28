@@ -8,12 +8,13 @@ import (
 	"math/big"
 )
 
-func Evm(code []byte, state map[string]domain.AccState, block *domain.BlockInfo, tx *domain.TxData) []*big.Int {
+func Evm(code []byte, state map[string]domain.AccState, block *domain.BlockInfo, tx *domain.TxData) *domain.Result {
 	var stack *EvmStack = &EvmStack{}
 	var memory *EvmMemory = &EvmMemory{}
 	var storage map[string]*big.Int = make(map[string]*big.Int)
 	var logs *domain.Logs = &domain.Logs{}
 	var result *domain.Result = &domain.Result{}
+	var lastResult *domain.Result = &domain.Result{}
 	pc := 0
 
 LOOP:
@@ -440,7 +441,8 @@ LOOP:
 			if opcode > 160 {
 				topics := heads[2:]
 				for i := range topics {
-					logs.Topics = append(logs.Topics, topics[i].String())
+					t := utils.ToAddress(topics[i])
+					logs.Topics = append(logs.Topics, t)
 				}
 			}
 		case RETURN:
@@ -450,7 +452,7 @@ LOOP:
 			}
 
 			bn := memory.load(int(heads[0].Int64()), int(heads[1].Int64()))
-			result.Return, result.Success = bn.String(), true
+			result.Return, result.Success = utils.ToHex(bn), true
 		case REVERT:
 			heads := stack.getHeads(2)
 			if heads == nil {
@@ -458,9 +460,37 @@ LOOP:
 			}
 
 			bn := memory.load(int(heads[0].Int64()), int(heads[1].Int64()))
-			result.Return, result.Success = bn.String(), false
+			result.Return, result.Success = utils.ToHex(bn), false
+		case CALL:
+			heads := stack.getHeads(7)
+			if heads == nil {
+				break LOOP
+			}
+
+			addr := utils.ToAddress(heads[1])
+			extc := state[addr].Code.Bin
+
+			newTx := tx
+			tx.From = tx.To 
+			tx.To = addr
+
+			hx, _ := hex.DecodeString(extc)
+			res := Evm(hx, state, block, newTx)
+
+			bn := big.NewInt(0)
+			if res.Success {
+				bn = big.NewInt(1)
+			}
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+
+			if res.Return != "" {
+				m, _ := new(big.Int).SetString(res.Return, 16)
+				memory.store(int(heads[5].Int64()), int(heads[6].Int64()), m)
+			}
+			lastResult.Return = res.Return
 		}
 		pc++
 	}
-	return stack.Stack
+	result.Stack = stack.Stack
+	return result
 }

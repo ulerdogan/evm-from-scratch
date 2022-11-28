@@ -13,6 +13,7 @@ func Evm(code []byte, state map[string]domain.AccState, block *domain.BlockInfo,
 	var memory *EvmMemory = &EvmMemory{}
 	var storage map[string]*big.Int = make(map[string]*big.Int)
 	var logs *domain.Logs = &domain.Logs{}
+	var result *domain.Result = &domain.Result{}
 	pc := 0
 
 LOOP:
@@ -425,6 +426,7 @@ LOOP:
 			if heads == nil {
 				break LOOP
 			}
+
 			storage[heads[0].String()] = heads[1]
 		case LOG0, LOG1, LOG2, LOG3, LOG4:
 			heads := stack.getHeads(int(opcode) - 158)
@@ -434,13 +436,29 @@ LOOP:
 
 			logs.Address = tx.To
 			logs.Data = memory.load(int(heads[0].Int64()), int(heads[1].Int64())).String()
-			
+
 			if opcode > 160 {
 				topics := heads[2:]
 				for i := range topics {
 					logs.Topics = append(logs.Topics, topics[i].String())
 				}
 			}
+		case RETURN:
+			heads := stack.getHeads(2)
+			if heads == nil {
+				break LOOP
+			}
+
+			bn := memory.load(int(heads[0].Int64()), int(heads[1].Int64()))
+			result.Return, result.Success = bn.String(), true
+		case REVERT:
+			heads := stack.getHeads(2)
+			if heads == nil {
+				break LOOP
+			}
+
+			bn := memory.load(int(heads[0].Int64()), int(heads[1].Int64()))
+			result.Return, result.Success = bn.String(), false
 		}
 		pc++
 	}

@@ -48,6 +48,11 @@ type Logs struct {
 	Topics []string
 }
 
+type Result struct {
+	Return string
+	Success bool
+}
+
 type maxNums struct {
 	Uint256Max *big.Int
 }

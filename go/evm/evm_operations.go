@@ -61,6 +61,9 @@ func (m *EvmMemory) expand(offset, size int) {
 }
 
 func (m *EvmMemory) store(offset, size int, value *big.Int) {
+	if size == 0 {
+		return
+	}
 	m.expand(offset, size)
 
 	hx := utils.ToHex(value)

@@ -471,7 +471,7 @@ LOOP:
 			extc := state[addr].Code.Bin
 
 			newTx := tx
-			tx.From = tx.To 
+			tx.From = tx.To
 			tx.To = addr
 
 			hx, _ := hex.DecodeString(extc)
@@ -488,6 +488,19 @@ LOOP:
 				memory.store(int(heads[5].Int64()), int(heads[6].Int64()), m)
 			}
 			lastResult.Return = res.Return
+		case RETURNDATASIZE:
+			size := int64(len(lastResult.Return) / 2)
+			bn := big.NewInt(size)
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+		case RETURNDATACOPY:
+			heads := stack.getHeads(3)
+			if heads == nil {
+				break LOOP
+			}
+
+			lr := lastResult.Return[int(heads[1].Int64())*2:]
+			bn, _ := new(big.Int).SetString(lr, 16)
+			memory.store(int(heads[0].Int64()), int(heads[2].Int64()), bn)
 		}
 		pc++
 	}

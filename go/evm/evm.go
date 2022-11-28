@@ -11,6 +11,7 @@ import (
 func Evm(code []byte, state map[string]domain.AccState, block *domain.BlockInfo, tx *domain.TxData) []*big.Int {
 	var stack *EvmStack = &EvmStack{}
 	var memory *EvmMemory = &EvmMemory{}
+	var storage map[string]*big.Int = make(map[string]*big.Int)
 	pc := 0
 
 LOOP:
@@ -407,6 +408,23 @@ LOOP:
 
 			bn := utils.HexToBn(balance)
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+		case SLOAD:
+			head := stack.getHeads(1)[0]
+			if head == nil {
+				break LOOP
+			}
+
+			bn := storage[head.String()]
+			if bn == nil {
+				bn = big.NewInt(0)
+			}
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+		case SSTORE:
+			heads := stack.getHeads(2)
+			if heads == nil {
+				break LOOP
+			}
+			storage[heads[0].String()] = heads[1]
 		}
 		pc++
 	}

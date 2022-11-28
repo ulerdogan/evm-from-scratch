@@ -20,7 +20,8 @@ type code struct {
 
 type AccState struct {
 	Balance string
-	Code code
+	Nonce   int
+	Code    code
 }
 
 type BlockInfo struct {

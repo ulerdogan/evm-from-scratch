@@ -528,6 +528,39 @@ LOOP:
 				memory.store(int(heads[4].Int64()), int(heads[5].Int64()), m)
 			}
 			lastResult.Return = res.Return
+		case STATICCALL:
+			heads := stack.getHeads(6)
+			if heads == nil {
+				break LOOP
+			}
+
+			extc := state[utils.ToAddress(heads[1])].Code.Bin
+			hx, _ := hex.DecodeString(extc)
+
+			for i := range DISALLOWED {
+				if utils.Contains(hx, DISALLOWED[i]) {
+					bn := big.NewInt(0)
+					stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+					break LOOP
+				}
+			}
+
+			newTx := tx
+			newTx.From = tx.To
+			res := Evm(hx, state, block, newTx, storage)
+
+			bn := big.NewInt(0)
+			if res.Success {
+				bn = big.NewInt(1)
+			}
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+
+			if res.Return != "" {
+				m, _ := new(big.Int).SetString(res.Return, 16)
+				memory.store(int(heads[4].Int64()), int(heads[5].Int64()), m)
+			}
+			lastResult.Return = res.Return
+		case CREATE:
 		}
 		pc++
 	}

@@ -89,3 +89,5 @@ const (
 	INVALID        byte = 0xfe
 	SELFDESTRUCT   byte = 0xff
 )
+
+var DISALLOWED []byte = []byte{CREATE, LOG0, LOG1, LOG2, LOG3, LOG4, SSTORE, SELFDESTRUCT, CALL}

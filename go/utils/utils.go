@@ -23,6 +23,15 @@ func ToAddress(bn *big.Int) string {
 	return ("0x" + ToHex(bn))
 }
 
+func Contains(opcodes []byte, opcode byte) bool {
+    for _, n := range opcodes {
+        if n == opcode {
+            return true
+        }
+    }
+    return false
+}
+
 func HexToBn(str string) *big.Int {
 	bn := new(big.Int)
 	if str == "" || str == "0x" {

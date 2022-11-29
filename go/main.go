@@ -50,7 +50,7 @@ func main() {
 			expectedStack = append(expectedStack, i)
 		}
 
-		stack := evm.Evm(bin, test.State, &test.Block, &test.Tx).Stack
+		stack := evm.Evm(bin, test.State, &test.Block, &test.Tx, make(map[string]*big.Int)).Stack
 
 		match := len(stack) == len(expectedStack)
 		if match {

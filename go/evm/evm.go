@@ -8,14 +8,18 @@ import (
 	"math/big"
 )
 
-func Evm(code []byte, state map[string]domain.AccState, block *domain.BlockInfo, tx *domain.TxData) *domain.Result {
+func Evm(code []byte, state map[string]domain.AccState, block *domain.BlockInfo, tx *domain.TxData, d interface{}) (result *domain.Result) {
 	var stack *EvmStack = &EvmStack{}
 	var memory *EvmMemory = &EvmMemory{}
-	var storage map[string]*big.Int = make(map[string]*big.Int)
 	var logs *domain.Logs = &domain.Logs{}
-	var result *domain.Result = &domain.Result{}
+	result = &domain.Result{Success: true}
 	var lastResult *domain.Result = &domain.Result{}
 	pc := 0
+
+	var storage map[string]*big.Int = make(map[string]*big.Int)
+	if d.(map[string]*big.Int) != nil {
+		storage = d.(map[string]*big.Int)
+	}
 
 LOOP:
 	for pc < len(code) {
@@ -475,7 +479,7 @@ LOOP:
 			tx.To = addr
 
 			hx, _ := hex.DecodeString(extc)
-			res := Evm(hx, state, block, newTx)
+			res := Evm(hx, state, block, newTx, storage)
 
 			bn := big.NewInt(0)
 			if res.Success {
@@ -501,9 +505,32 @@ LOOP:
 			lr := lastResult.Return[int(heads[1].Int64())*2:]
 			bn, _ := new(big.Int).SetString(lr, 16)
 			memory.store(int(heads[0].Int64()), int(heads[2].Int64()), bn)
+		case DELEGATECALL:
+			heads := stack.getHeads(6)
+			if heads == nil {
+				break LOOP
+			}
+
+			extc := state[utils.ToAddress(heads[1])].Code.Bin
+			hx, _ := hex.DecodeString(extc)
+
+			newTx := tx
+			res := Evm(hx, state, block, newTx, storage)
+
+			bn := big.NewInt(0)
+			if res.Success {
+				bn = big.NewInt(1)
+			}
+			stack.Stack = append([]*big.Int{bn}, stack.Stack...)
+
+			if res.Return != "" {
+				m, _ := new(big.Int).SetString(res.Return, 16)
+				memory.store(int(heads[4].Int64()), int(heads[5].Int64()), m)
+			}
+			lastResult.Return = res.Return
 		}
 		pc++
 	}
 	result.Stack = stack.Stack
-	return result
+	return
 }

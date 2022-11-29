@@ -9,6 +9,9 @@ import (
 
 func (s *EvmStack) getHeads(n int) []*big.Int {
 	if !s.checkStack(n) {
+		if n == 1 {
+			return []*big.Int{nil}
+		}
 		return nil
 	}
 	heads := s.Stack[0:n]

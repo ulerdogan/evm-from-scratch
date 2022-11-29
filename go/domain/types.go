@@ -9,11 +9,11 @@ type TestCase struct {
 	State  map[string]AccState
 	Block  BlockInfo
 	Tx     TxData
-	Code   code
+	Code   Code
 	Expect expect
 }
 
-type code struct {
+type Code struct {
 	Bin string
 	Asm string
 }
@@ -21,7 +21,7 @@ type code struct {
 type AccState struct {
 	Balance string
 	Nonce   int
-	Code    code
+	Code    Code
 }
 
 type BlockInfo struct {
@@ -50,6 +50,7 @@ type Logs struct {
 
 type Result struct {
 	Stack []*big.Int
+	State map[string]AccState
 	Return string
 	Success bool
 }

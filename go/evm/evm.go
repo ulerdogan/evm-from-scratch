@@ -33,7 +33,7 @@ LOOP:
 		switch opcode {
 		case STOP:
 			break LOOP
-		case PUSH1, PUSH2, PUSH3, PUSH13, PUSH20, PUSH32:
+		case PUSH1, PUSH2, PUSH3, PUSH4, PUSH13, PUSH20, PUSH32:
 			pb := int(opcode - 95)
 			item := utils.ToHex(code[pc+1 : pc+1+pb])
 			bn := utils.HexToBn(item)
@@ -568,12 +568,12 @@ LOOP:
 			extc := intc.Bytes()
 			newTx := tx
 			newTx.From = tx.To
-			res := Evm(extc, state, block, newTx, storage)
+			res := Evm(extc, state, block, newTx, storage)	
 
 			if !res.Success {
 				stack.Stack = append([]*big.Int{big.NewInt(0)}, stack.Stack...)
 				break LOOP
-			}
+			}	
 
 			if res.Return != "" {
 				// random address, TODO: calc address
@@ -581,11 +581,11 @@ LOOP:
 					Balance: "0x" + heads[0].String(),
 					Code:    domain.Code{Bin: res.Return},
 				}
-			} else {
-				state["0x1000000000000000000000000000000000000001"] = domain.AccState{
-					Balance: "0x" + heads[0].String(),
+				} else {
+					state["0x1000000000000000000000000000000000000001"] = domain.AccState{
+						Balance: "0x" + heads[0].String(),
+					}
 				}
-			}
 
 			bn := utils.HexToBn("0x1000000000000000000000000000000000000001")
 			stack.Stack = append([]*big.Int{bn}, stack.Stack...)

@@ -67,6 +67,7 @@ const (
 	PUSH1          byte = 0x60
 	PUSH2          byte = 0x61
 	PUSH3          byte = 0x62
+	PUSH4          byte = 0x63
 	PUSH13         byte = 0x6c
 	PUSH20         byte = 0x73
 	PUSH32         byte = 0x7f
